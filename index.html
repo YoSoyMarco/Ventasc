@@ -394,9 +394,20 @@
                                         </svg>
                                     </button>
 
-                                    <div class="px-5 text-center min-w-[5rem]">
-                                        <span class="item-qty block text-2xl font-extrabold text-slate-800 tabular-nums leading-none">${item.quantity}</span>
-                                        <span class="text-[11px] font-medium text-slate-400">${item.quantity === 1 ? 'pieza' : 'piezas'}</span>
+                                    <div class="px-2 text-center min-w-[5.5rem]">
+                                        <label for="qty-input-${item.id}" class="sr-only">Cantidad de ${escapeHTML(item.name)}</label>
+                                        <input 
+                                            id="qty-input-${item.id}"
+                                            type="number" 
+                                            inputmode="numeric"
+                                            min="0"
+                                            step="1"
+                                            value="${item.quantity}"
+                                            data-action="manual-qty"
+                                            aria-label="Cantidad editable de ${escapeHTML(item.name)}"
+                                            class="item-qty w-20 text-center text-2xl font-extrabold text-slate-800 bg-transparent hover:bg-white/80 focus:bg-white rounded-lg border border-transparent focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 tabular-nums leading-tight transition-all py-0.5"
+                                        >
+                                        <span class="item-unit-label block text-[11px] font-medium text-slate-400 mt-0.5">${item.quantity === 1 ? 'pieza' : 'piezas'}</span>
                                     </div>
 
                                     <button 
@@ -472,6 +483,75 @@
                     renderItems();
                     updateGlobalSummary(true);
                 }
+            });
+
+            // Seleccionar todo el texto al hacer clic/foco en la cantidad para facilitar escritura rápida
+            itemsContainer.addEventListener('focusin', (event) => {
+                const input = event.target.closest('input[data-action="manual-qty"]');
+                if (input) {
+                    input.select();
+                }
+            });
+
+            // Recalcular en tiempo real al escribir manualmente la cantidad (sin perder el foco)
+            itemsContainer.addEventListener('input', (event) => {
+                const input = event.target.closest('input[data-action="manual-qty"]');
+                if (!input) return;
+
+                const card = input.closest('article[data-id]');
+                if (!card) return;
+
+                const id = card.dataset.id;
+                const index = items.findIndex(i => i.id === id);
+                if (index === -1) return;
+
+                // Sanitizar entrada: permitir vacío temporalmente mientras escribe, convertir a entero >= 0
+                const rawValue = input.value.trim();
+                let parsedQty = rawValue === '' ? 0 : parseInt(rawValue, 10);
+                if (isNaN(parsedQty) || parsedQty < 0) {
+                    parsedQty = 0;
+                }
+
+                items[index].quantity = parsedQty;
+                saveItems();
+
+                // Actualizar subtotal individual, etiqueta y estado de botones de la tarjeta sin re-renderizar el DOM
+                const subtotal = parsedQty * items[index].price;
+                const subtotalEl = card.querySelector('.item-subtotal');
+                const unitLabelEl = card.querySelector('.item-unit-label');
+                const decrementBtn = card.querySelector('button[data-action="decrement"]');
+                const resetBtn = card.querySelector('button[data-action="reset"]');
+
+                if (subtotalEl) {
+                    subtotalEl.textContent = `${currencyFormatter.format(subtotal)} MXN`;
+                }
+                if (unitLabelEl) {
+                    unitLabelEl.textContent = parsedQty === 1 ? 'pieza' : 'piezas';
+                }
+                if (decrementBtn) {
+                    decrementBtn.disabled = parsedQty === 0;
+                }
+                if (resetBtn) {
+                    resetBtn.disabled = parsedQty === 0;
+                }
+
+                updateGlobalSummary(false);
+            });
+
+            // Normalizar el valor visual al salir del input (ej. si quedó vacío o con ceros a la izquierda)
+            itemsContainer.addEventListener('change', (event) => {
+                const input = event.target.closest('input[data-action="manual-qty"]');
+                if (!input) return;
+
+                const card = input.closest('article[data-id]');
+                if (!card) return;
+
+                const id = card.dataset.id;
+                const item = items.find(i => i.id === id);
+                if (!item) return;
+
+                input.value = item.quantity;
+                updateGlobalSummary(true);
             });
 
             // Agregar nuevo artículo desde el formulario
