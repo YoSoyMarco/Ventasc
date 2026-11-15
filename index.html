@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario & Ventas - Estuches y Artículos</title>
+    <!-- Carga de Tailwind CSS para un diseño moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Inter de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Animación sutil para los cambios numéricos */
+        @keyframes pulse-scale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pulse-scale 0.2s ease-out;
+        }
+        /* Animación de entrada para nuevas tarjetas */
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-card {
+            animation: slide-in 0.25s ease-out forwards;
+        }
+        /* Ocultar flechas nativas en inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen py-6 px-4 sm:px-6 selection:bg-indigo-100 selection:text-indigo-700">
+
+    <!-- Contenedor Principal -->
+    <main class="w-full max-w-2xl mx-auto space-y-6">
+        
+        <!-- Encabezado y Resumen General Destacado -->
+        <header class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-200/60 relative overflow-hidden">
+            <!-- Elementos decorativos de fondo -->
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-36 h-36 bg-indigo-400/20 rounded-full blur-xl pointer-events-none"></div>
+
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/15">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-inner border border-white/20 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="7" width="18" height="12" rx="3" />
+                            <path d="M3 11h18" />
+                            <path d="M16 11v2" />
+                            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Control de Artículos</h1>
+                        <p class="text-xs sm:text-sm text-indigo-100/90">Estuches y productos dinámicos</p>
+                    </div>
+                </div>
+
+                <!-- Botón Global Reiniciar Todo -->
+                <button 
+                    id="btn-reset-all" 
+                    type="button"
+                    disabled
+                    class="self-start sm:self-auto inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 disabled:opacity-40 disabled:hover:bg-white/15 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl border border-white/20 backdrop-blur-sm transition-all cursor-pointer disabled:cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                    </svg>
+                    Reiniciar todo
+                </button>
+            </div>
+
+            <!-- Panel de Totales Globales -->
+            <div class="relative z-10 grid grid-cols-2 gap-3 sm:gap-4 pt-6">
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
+                    <div class="flex items-center gap-1.5 text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                        <span>Total piezas</span>
+                    </div>
+                    <p id="global-pieces" class="text-2xl sm:text-3xl font-extrabold tabular-nums">0</p>
+                </div>
+
+                <div class="bg-emerald-500/20 backdrop-blur-md rounded-2xl p-4 border border-emerald-300/30">
+                    <div class="flex items-center gap-1.5 text-emerald-100 text-xs font-semibold uppercase tracking-wider mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Total en dinero</span>
+                    </div>
+                    <p id="global-money" class="text-2xl sm:text-3xl font-extrabold text-emerald-200 tabular-nums truncate">$0.00</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Formulario Rápido para Agregar Nuevos Artículos -->
+        <section aria-label="Agregar nuevo artículo" class="bg-white rounded-3xl p-5 sm:p-6 shadow-md shadow-slate-200/60 border border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3.5 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                Agregar nuevo artículo
+            </h2>
+
+            <form id="add-item-form" class="grid grid-cols-1 sm:grid-cols-12 gap-3" novalidate>
+                <!-- Campo Nombre -->
+                <div class="sm:col-span-6">
+                    <label for="item-name" class="sr-only">Nombre del artículo</label>
+                    <input 
+                        type="text" 
+                        id="item-name" 
+                        placeholder="Nombre (ej. Mochilas, Cargadores)" 
+                        required
+                        maxlength="45"
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    >
+                </div>
+
+                <!-- Campo Precio Unitario -->
+                <div class="sm:col-span-3 relative">
+                    <label for="item-price" class="sr-only">Precio unitario en MXN</label>
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm pointer-events-none">$</span>
+                    <input 
+                        type="number" 
+                        id="item-price" 
+                        placeholder="Precio" 
+                        step="0.01" 
+                        min="0.01" 
+                        required
+                        class="w-full pl-8 pr-3 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 text-sm font-medium tabular-nums focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    >
+                </div>
+
+                <!-- Botón Agregar -->
+                <div class="sm:col-span-3">
+                    <button 
+                        type="submit"
+                        class="w-full h-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-semibold text-sm shadow-sm shadow-indigo-200 flex items-center justify-center gap-1.5 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>Agregar</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Mensaje de retroalimentación/validación en línea -->
+            <p id="form-feedback" class="hidden mt-2.5 text-xs font-medium text-rose-600 flex items-center gap-1.5"></p>
+        </section>
+
+        <!-- Lista de Artículos -->
+        <section aria-label="Lista de artículos" class="space-y-3.5">
+            <div class="flex items-center justify-between px-1">
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Artículos en lista (<span id="items-count">0</span>)
+                </h2>
+                <button 
+                    id="btn-restore-default" 
+                    type="button"
+                    class="hidden text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline underline-offset-2 cursor-pointer">
+                    Restaurar "Estuches"
+                </button>
+            </div>
+
+            <!-- Contenedor dinámico de tarjetas -->
+            <div id="items-container" class="space-y-3.5"></div>
+
+            <!-- Estado vacío cuando no hay artículos -->
+            <div id="empty-state" class="hidden bg-white rounded-3xl p-8 text-center border border-dashed border-slate-300 space-y-3">
+                <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="7" width="18" height="12" rx="3" />
+                        <path d="M3 11h18" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-700">No hay artículos en la lista</h3>
+                    <p class="text-xs text-slate-400 mt-1">Agrega un nuevo producto arriba o restaura el artículo inicial.</p>
+                </div>
+                <button 
+                    id="btn-empty-restore"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer">
+                    Restaurar "Estuches ($150.00)"
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Lógica de la aplicación -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const STORAGE_KEY = 'inventario_estuches_items_v1';
+
+            // Ítem inicial requerido por defecto
+            const DEFAULT_ITEMS = [
+                {
+                    id: 'default-estuches',
+                    name: 'Estuches',
+                    price: 150,
+                    quantity: 0
+                }
+            ];
+
+            // Formateador de moneda para Pesos Mexicanos (MXN)
+            const currencyFormatter = new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            // Referencias al DOM
+            const globalPiecesEl = document.getElementById('global-pieces');
+            const globalMoneyEl = document.getElementById('global-money');
+            const btnResetAll = document.getElementById('btn-reset-all');
+            const addItemForm = document.getElementById('add-item-form');
+            const itemNameInput = document.getElementById('item-name');
+            const itemPriceInput = document.getElementById('item-price');
+            const formFeedback = document.getElementById('form-feedback');
+            const itemsContainer = document.getElementById('items-container');
+            const itemsCountEl = document.getElementById('items-count');
+            const emptyState = document.getElementById('empty-state');
+            const btnRestoreDefault = document.getElementById('btn-restore-default');
+            const btnEmptyRestore = document.getElementById('btn-empty-restore');
+
+            // Cargar estado desde localStorage o usar el valor inicial
+            let items = loadItems();
+
+            function loadItems() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved !== null) {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed)) return parsed;
+                    }
+                } catch (error) {
+                    console.error('Error al leer localStorage:', error);
+                }
+                return JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+            }
+
+            function saveItems() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+                } catch (error) {
+                    console.error('Error al guardar en localStorage:', error);
+                }
+            }
+
+            function triggerPopAnimation(element) {
+                if (!element) return;
+                element.classList.remove('animate-pop');
+                void element.offsetWidth;
+                element.classList.add('animate-pop');
+            }
+
+            function showFormError(message) {
+                formFeedback.textContent = message;
+                formFeedback.classList.remove('hidden');
+            }
+
+            function clearFormError() {
+                formFeedback.textContent = '';
+                formFeedback.classList.add('hidden');
+            }
+
+            // Escapar texto para prevenir inyección HTML en nombres personalizados
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // Actualizar panel superior de totales globales
+            function updateGlobalSummary(animate = false) {
+                const totalPieces = items.reduce((sum, item) => sum + item.quantity, 0);
+                const totalMoney = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+                globalPiecesEl.textContent = totalPieces;
+                globalMoneyEl.textContent = `${currencyFormatter.format(totalMoney)} MXN`;
+                itemsCountEl.textContent = items.length;
+
+                btnResetAll.disabled = totalPieces === 0;
+
+                // Mostrar acceso rápido para restaurar "Estuches" si fue borrado
+                const hasEstuches = items.some(item => item.name.trim().toLowerCase() === 'estuches');
+                if (!hasEstuches && items.length > 0) {
+                    btnRestoreDefault.classList.remove('hidden');
+                } else {
+                    btnRestoreDefault.classList.add('hidden');
+                }
+
+                if (animate) {
+                    triggerPopAnimation(globalPiecesEl);
+                    triggerPopAnimation(globalMoneyEl);
+                }
+            }
+
+            // Renderizar la lista completa de tarjetas de artículos
+            function renderItems(newlyAddedId = null) {
+                itemsContainer.innerHTML = '';
+
+                if (items.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+
+                    items.forEach(item => {
+                        const subtotal = item.quantity * item.price;
+                        const isZero = item.quantity === 0;
+
+                        const card = document.createElement('article');
+                        card.dataset.id = item.id;
+                        card.className = `bg-white rounded-3xl p-5 shadow-md shadow-slate-200/50 border border-slate-100 transition-all ${newlyAddedId === item.id ? 'animate-card ring-2 ring-indigo-500/40' : ''}`;
+
+                        card.innerHTML = `
+                            <!-- Fila Superior: Nombre, Precio Unitario y Botón Eliminar -->
+                            <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
+                                <div class="min-w-0">
+                                    <h3 class="text-lg sm:text-xl font-bold text-slate-800 truncate" title="${escapeHTML(item.name)}">
+                                        ${escapeHTML(item.name)}
+                                    </h3>
+                                    <span class="inline-flex items-center gap-1 mt-1 bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                                        ${currencyFormatter.format(item.price)} MXN <span class="font-normal opacity-75">/ pza</span>
+                                    </span>
+                                </div>
+
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <!-- Botón Reiniciar Cantidad Individual -->
+                                    <button 
+                                        type="button"
+                                        data-action="reset"
+                                        ${isZero ? 'disabled' : ''}
+                                        title="Reiniciar cantidad a 0"
+                                        class="p-2 rounded-xl text-slate-400 hover:text-amber-600 hover:bg-amber-50 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-colors cursor-pointer disabled:cursor-not-allowed">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                            <path d="M3 3v5h5"/>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Botón Eliminar Artículo -->
+                                    <button 
+                                        type="button"
+                                        data-action="delete"
+                                        title="Eliminar artículo"
+                                        aria-label="Eliminar ${escapeHTML(item.name)}"
+                                        class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Fila Inferior: Controles (- / Cantidad / +) y Subtotal -->
+                            <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <!-- Controles de cantidad -->
+                                <div class="flex items-center justify-between sm:justify-start bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 w-full sm:w-auto">
+                                    <button 
+                                        type="button"
+                                        data-action="decrement"
+                                        ${isZero ? 'disabled' : ''}
+                                        aria-label="Disminuir cantidad"
+                                        class="w-11 h-11 rounded-xl bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 active:scale-95 disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-700 disabled:active:scale-100 shadow-sm border border-slate-200 flex items-center justify-center transition-all cursor-pointer disabled:cursor-not-allowed">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+
+                                    <div class="px-5 text-center min-w-[5rem]">
+                                        <span class="item-qty block text-2xl font-extrabold text-slate-800 tabular-nums leading-none">${item.quantity}</span>
+                                        <span class="text-[11px] font-medium text-slate-400">${item.quantity === 1 ? 'pieza' : 'piezas'}</span>
+                                    </div>
+
+                                    <button 
+                                        type="button"
+                                        data-action="increment"
+                                        aria-label="Aumentar cantidad"
+                                        class="w-11 h-11 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-sm shadow-indigo-200 flex items-center justify-center transition-all cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Subtotal Individual -->
+                                <div class="flex sm:flex-col items-center sm:items-end justify-between bg-emerald-50/60 sm:bg-transparent px-4 py-2.5 sm:p-0 rounded-xl border border-emerald-100 sm:border-0">
+                                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Subtotal</span>
+                                    <span class="item-subtotal text-xl font-extrabold text-emerald-700 tabular-nums">
+                                        ${currencyFormatter.format(subtotal)} MXN
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+
+                        itemsContainer.appendChild(card);
+                    });
+                }
+
+                updateGlobalSummary(Boolean(newlyAddedId));
+            }
+
+            // Delegación de eventos en las tarjetas de artículos
+            itemsContainer.addEventListener('click', (event) => {
+                const button = event.target.closest('button[data-action]');
+                if (!button) return;
+
+                const card = button.closest('article[data-id]');
+                if (!card) return;
+
+                const id = card.dataset.id;
+                const action = button.dataset.action;
+                const index = items.findIndex(i => i.id === id);
+                if (index === -1) return;
+
+                if (action === 'increment') {
+                    items[index].quantity += 1;
+                    saveItems();
+                    renderItems();
+                    const updatedCard = itemsContainer.querySelector(`article[data-id="${id}"]`);
+                    if (updatedCard) {
+                        triggerPopAnimation(updatedCard.querySelector('.item-qty'));
+                        triggerPopAnimation(updatedCard.querySelector('.item-subtotal'));
+                    }
+                    updateGlobalSummary(true);
+                } else if (action === 'decrement' && items[index].quantity > 0) {
+                    items[index].quantity -= 1;
+                    saveItems();
+                    renderItems();
+                    const updatedCard = itemsContainer.querySelector(`article[data-id="${id}"]`);
+                    if (updatedCard) {
+                        triggerPopAnimation(updatedCard.querySelector('.item-qty'));
+                        triggerPopAnimation(updatedCard.querySelector('.item-subtotal'));
+                    }
+                    updateGlobalSummary(true);
+                } else if (action === 'reset' && items[index].quantity > 0) {
+                    items[index].quantity = 0;
+                    saveItems();
+                    renderItems();
+                    updateGlobalSummary(true);
+                } else if (action === 'delete') {
+                    items.splice(index, 1);
+                    saveItems();
+                    renderItems();
+                    updateGlobalSummary(true);
+                }
+            });
+
+            // Agregar nuevo artículo desde el formulario
+            addItemForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                clearFormError();
+
+                const name = itemNameInput.value.trim();
+                const price = parseFloat(itemPriceInput.value);
+
+                if (!name) {
+                    showFormError('Por favor ingresa el nombre del artículo.');
+                    itemNameInput.focus();
+                    return;
+                }
+
+                if (isNaN(price) || price <= 0) {
+                    showFormError('Ingresa un precio unitario válido mayor a $0.');
+                    itemPriceInput.focus();
+                    return;
+                }
+
+                const newItem = {
+                    id: 'item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+                    name: name,
+                    price: Math.round(price * 100) / 100,
+                    quantity: 0
+                };
+
+                items.push(newItem);
+                saveItems();
+
+                // Limpiar campos y enfocar para entrada rápida continua
+                itemNameInput.value = '';
+                itemPriceInput.value = '';
+                itemNameInput.focus();
+
+                renderItems(newItem.id);
+            });
+
+            // Limpiar mensajes de error al escribir
+            itemNameInput.addEventListener('input', clearFormError);
+            itemPriceInput.addEventListener('input', clearFormError);
+
+            // Reiniciar todas las cantidades a 0 sin eliminar los artículos
+            btnResetAll.addEventListener('click', () => {
+                items = items.map(item => ({ ...item, quantity: 0 }));
+                saveItems();
+                renderItems();
+                updateGlobalSummary(true);
+            });
+
+            // Restaurar el ítem por defecto "Estuches"
+            function restoreEstuches() {
+                const exists = items.some(item => item.name.trim().toLowerCase() === 'estuches');
+                if (!exists) {
+                    const estuchesItem = {
+                        id: 'default-estuches-' + Date.now(),
+                        name: 'Estuches',
+                        price: 150,
+                        quantity: 0
+                    };
+                    items.unshift(estuchesItem);
+                    saveItems();
+                    renderItems(estuchesItem.id);
+                }
+            }
+
+            btnRestoreDefault.addEventListener('click', restoreEstuches);
+            btnEmptyRestore.addEventListener('click', restoreEstuches);
+
+            // Renderizado inicial
+            renderItems();
+        });
+    </script>
+</body>
+</html>
